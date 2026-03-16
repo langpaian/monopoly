@@ -1035,11 +1035,13 @@
                 transform-origin: center top;
             }
             
-            /* 棋盘中间日志区域 */
+            /* 棋盘中间日志区域 - 降低层级 */
             .board-center {
                 padding: 6px;
                 grid-column: 2 / 14;
                 grid-row: 2 / 10;
+                z-index: 1;  /* 日志区域在最下层 */
+                position: relative;
             }
             
             .board-center h3 {
@@ -1057,6 +1059,7 @@
                 padding: 20px 2px 2px 2px;
                 font-size: 0.5rem;
                 border-radius: 4px;
+                z-index: 5;  /* 格子层级高于日志 */
             }
             
             .space .name {
@@ -1083,11 +1086,13 @@
                 font-size: 1rem;
             }
             
-            /* 玩家棋子优化 - 防止重叠 */
+            /* 玩家棋子优化 - 防止重叠，提升到最上层 */
             .players-container {
                 gap: 1px;
                 min-height: 16px;
                 margin-top: 3px;
+                position: relative;
+                z-index: 100;  /* 玩家容器在最上层 */
             }
             
             .player-piece {
@@ -1095,6 +1100,8 @@
                 height: 18px;
                 font-size: 0.65rem;
                 border-width: 1px;
+                position: relative;
+                z-index: 100;  /* 玩家棋子在最上层 */
             }
             
             /* 房屋优化 - 防止遮挡 */
