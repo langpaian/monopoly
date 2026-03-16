@@ -992,99 +992,123 @@
             }
         }
 
-        /* 手机竖屏模式优化 */
+        /* 手机竖屏模式优化 - 自动适配棋盘大小 */
         @media (max-width: 768px) and (orientation: portrait) {
             body {
-                padding: 10px;
+                padding: 8px;
                 min-height: 100vh;
             }
             
             .game-header {
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
             
             .game-header h1 {
-                font-size: 1.6rem;
+                font-size: 1.4rem;
             }
             
             .game-info {
-                gap: 10px;
-                margin-top: 8px;
+                gap: 8px;
+                margin-top: 6px;
             }
             
             .info-card {
-                padding: 8px 12px;
-                font-size: 0.9rem;
+                padding: 6px 10px;
+                font-size: 0.8rem;
             }
             
-            /* 棋盘区域优化 - 允许滚动 */
+            /* 棋盘区域优化 - 自动适配屏幕，无需缩放 */
             .board-container {
-                overflow-x: auto;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                max-width: 100%;
+                width: 100%;
+                overflow: visible;
             }
             
             .board {
-                min-width: 600px;  /* 保证棋盘最小宽度 */
-                gap: 3px;
-                padding: 10px;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: auto !important;
+                height: auto !important;
+                max-height: 60vh !important;  /* 限制最大高度为屏幕 60% */
                 aspect-ratio: 14 / 10;
-                max-height: none;  /* 移除高度限制，允许滚动 */
+                gap: 2px;
+                padding: 6px;
+                transform-origin: center top;
             }
             
             /* 棋盘中间日志区域 */
             .board-center {
-                padding: 10px;
+                padding: 6px;
+                grid-column: 2 / 14;
+                grid-row: 2 / 10;
             }
             
             .board-center h3 {
-                font-size: 0.9rem;
+                font-size: 0.75rem;
+                margin-bottom: 4px;
             }
             
             .message-log {
-                font-size: 0.8rem;
-                max-height: 150px;
+                font-size: 0.7rem;
+                max-height: 100px;
             }
             
-            /* 格子内容优化 */
+            /* 格子内容优化 - 自动缩小 */
             .space {
-                padding: 35px 4px 4px 4px;
-                font-size: 0.6rem;
+                padding: 20px 2px 2px 2px;
+                font-size: 0.5rem;
+                border-radius: 4px;
             }
             
             .space .name {
-                font-size: 0.6rem;
+                font-size: 0.5rem;
                 line-height: 1.1;
+                max-width: 100%;
+                word-break: break-word;
             }
             
             .space .price {
+                font-size: 0.5rem;
+            }
+            
+            .space.corner {
+                font-size: 0.55rem;
+            }
+            
+            /* 监狱格子特殊优化 */
+            .space.jail .name {
                 font-size: 0.6rem;
+            }
+            
+            .space.jail .jail-icon {
+                font-size: 1rem;
             }
             
             /* 玩家棋子优化 - 防止重叠 */
             .players-container {
-                gap: 2px;
-                min-height: 20px;
+                gap: 1px;
+                min-height: 16px;
+                margin-top: 3px;
             }
             
             .player-piece {
-                width: 24px;
-                height: 24px;
-                font-size: 0.85rem;
+                width: 18px;
+                height: 18px;
+                font-size: 0.65rem;
+                border-width: 1px;
             }
             
             /* 房屋优化 - 防止遮挡 */
             .house {
-                min-width: 26px !important;
-                min-height: 26px !important;
-                font-size: 15px !important;
-                top: 2px !important;
+                min-width: 20px !important;
+                min-height: 20px !important;
+                font-size: 12px !important;
+                top: 1px !important;
+                padding: 2px 4px !important;
             }
             
             /* 侧边栏面板优化 */
             .side-panels {
-                gap: 10px;
+                gap: 8px;
             }
             
             .draggable-panel {
@@ -1092,63 +1116,67 @@
             }
             
             .panel-header h3 {
-                font-size: 0.95rem;
+                font-size: 0.85rem;
+            }
+            
+            .panel-content {
+                padding: 10px;
             }
             
             /* 骰子区域优化 */
             .dice {
-                width: 60px;
-                height: 60px;
-                font-size: 2rem;
-                line-height: 60px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.6rem;
+                line-height: 50px;
             }
             
-            /* 按钮优化 - 触摸友好 */
+            /* 按钮优化 - 触摸友好但紧凑 */
             .roll-btn,
             .action-btn,
             .buy-btn,
             .end-turn-btn {
-                padding: 12px 30px !important;
-                font-size: 1rem !important;
-                min-height: 48px;  /* 触摸友好最小高度 */
-                min-width: 120px;
+                padding: 10px 20px !important;
+                font-size: 0.9rem !important;
+                min-height: 44px;
+                min-width: 100px;
             }
             
             /* 玩家信息面板优化 */
             .player-info {
-                padding: 8px;
-                margin: 4px 0;
+                padding: 6px;
+                margin: 3px 0;
             }
             
             .player-avatar {
-                width: 38px;
-                height: 38px;
-                font-size: 1.2rem;
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
             }
             
             .player-name {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
             
             .player-stats {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
             }
             
             /* 布局切换按钮优化 */
             .layout-mode-btn {
-                padding: 10px 18px;
-                font-size: 0.85rem;
-                bottom: 15px;
-                right: 15px;
+                padding: 8px 14px;
+                font-size: 0.75rem;
+                bottom: 10px;
+                right: 10px;
             }
             
             /* 音效按钮优化 */
             .sound-control {
-                width: 44px;
-                height: 44px;
-                font-size: 1.3rem;
-                bottom: 15px;
-                left: 15px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+                bottom: 10px;
+                left: 10px;
             }
             
             /* 防止元素重叠 - 增加 z-index 层级 */
