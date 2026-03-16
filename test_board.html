@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 大富翁 Web 版</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #667eea;
+            padding: 20px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 15px;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        .game-header {
+            background: #f093fb;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        /* 棋盘 - 固定尺寸，确保显示 */
+        .game-board {
+            display: grid;
+            grid-template-columns: 120px 120px 120px 120px 120px 120px;
+            grid-template-rows: 120px 120px 120px 120px 120px 120px;
+            gap: 3px;
+            padding: 10px;
+            background: #27ae60;
+            width: 748px;
+            height: 748px;
+        }
+        .cell {
+            background: #ecf0f1;
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .cell.property { background: #ffeaa7; }
+        .cell.start { background: #fdcb6e; }
+        .cell.jail { background: #e74c3c; color: white; }
+        .cell.chance { background: #9b59b6; color: white; }
+        .cell.fate { background: #e67e22; color: white; }
+        .cell.empty { visibility: hidden; }
+        .cell-name { font-weight: bold; }
+        .cell-price { font-size: 10px; color: #7f8c8d; }
+        .game-controls {
+            padding: 15px;
+            background: #34495e;
+            color: white;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .message-log {
+            background: #2c3e50;
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🎲 大富翁 Web 版 - 棋盘测试</h1>
+            <p>如果看到 20 个格子围成一圈，说明布局正确！</p>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <div class="game-controls">
+            <p>📊 格子总数：<span id="cellCount">0</span> / 36（应该显示 20 个可见格子 +16 个空白）</p>
+            <div class="message-log" id="messageLog"></div>
+        </div>
+    </div>
+
+    <script>
+        const PROPERTIES = {
+            1: { name: "北京路", price: 1200 },
+            3: { name: "上海街", price: 2000 },
+            5: { name: "广州大道", price: 2400 },
+            6: { name: "深圳路", price: 2800 },
+            8: { name: "杭州街", price: 3200 },
+            9: { name: "成都路", price: 3600 },
+            11: { name: "武汉大道", price: 4000 },
+            13: { name: "南京路", price: 4400 },
+            14: { name: "西安街", price: 4800 },
+            16: { name: "重庆路", price: 5200 },
+            18: { name: "天津大道", price: 5600 },
+            19: { name: "苏州街", price: 6000 }
+        };
+
+        function createBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            // 6x6 Grid 布局（36 个位置）
+            const layout = [
+                // 第 1 行（顶边，从左到右）
+                { type: 'fate', name: '免费停车' },
+                { type: 'property', name: '西安街', price: 4800 },
+                { type: 'fate', name: '命运' },
+                { type: 'property', name: '南京路', price: 4400 },
+                { type: 'property', name: '武汉大道', price: 4000 },
+                { type: 'jail', name: '监狱' },
+                
+                // 第 2 行
+                { type: 'property', name: '天津大道', price: 5600 },
+                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
+                { type: 'property', name: '成都路', price: 3600 },
+                
+                // 第 3 行
+                { type: 'chance', name: '机会' },
+                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
+                { type: 'fate', name: '命运' },
+                
+                // 第 4 行
+                { type: 'property', name: '苏州街', price: 6000 },
+                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
+                { type: 'property', name: '杭州街', price: 3200 },
+                
+                // 第 5 行
+                { type: 'empty' },
+                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
+                { type: 'property', name: '深圳路', price: 2800 },
+                
+                // 第 6 行（底边，从左到右）
+                { type: 'start', name: '起点' },
+                { type: 'property', name: '北京路', price: 1200 },
+                { type: 'chance', name: '机会' },
+                { type: 'property', name: '上海街', price: 2000 },
+                { type: 'property', name: '广州大道', price: 2400 },
+                { type: 'property', name: '重庆路', price: 5200 }
+            ];
+
+            let visibleCount = 0;
+
+            for (let i = 0; i < 36; i++) {
+                const item = layout[i];
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                if (item.type === 'empty') {
+                    cell.classList.add('empty');
+                } else {
+                    cell.classList.add(item.type);
+                    cell.innerHTML = `
+                        <div class="cell-name">${item.name}</div>
+                        ${item.price ? `<div class="cell-price">¥${item.price}</div>` : ''}
+                    `;
+                    visibleCount++;
+                }
+                
+                board.appendChild(cell);
+            }
+
+            // 显示统计
+            document.getElementById('cellCount').textContent = visibleCount;
+            
+            // 添加日志
+            const log = document.getElementById('messageLog');
+            log.innerHTML = `<p>✅ 棋盘创建完成！</p>`;
+            log.innerHTML += `<p>📊 可见格子：${visibleCount} 个（应该是 20 个）</p>`;
+            log.innerHTML += `<p>📊 空白格子：${36 - visibleCount} 个（应该是 16 个）</p>`;
+            
+            if (visibleCount === 20) {
+                log.innerHTML += `<p style="color: #2ecc71;">🎉 布局正确！可以看到完整的环形棋盘！</p>`;
+            } else {
+                log.innerHTML += `<p style="color: #e74c3c;">❌ 布局错误！可见格子数量不对！</p>`;
+            }
+        }
+
+        // 页面加载完成后创建棋盘
+        window.onload = createBoard;
+    </script>
+</body>
+</html>
