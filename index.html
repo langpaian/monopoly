@@ -932,6 +932,401 @@
             }
         }
 
+        /* ========== 移动端深度适配 ========== */
+        
+        /* 超小屏幕（iPhone SE 等 375px） */
+        @media (max-width: 375px) {
+            body {
+                padding: 10px;
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .info-card {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .board {
+                gap: 2px;
+                padding: 8px;
+            }
+            
+            .space {
+                font-size: 0.55rem;
+                padding: 30px 3px 3px 3px;
+            }
+            
+            .space .name {
+                font-size: 0.55rem;
+            }
+            
+            .space .price {
+                font-size: 0.55rem;
+            }
+            
+            .player-piece {
+                width: 22px;
+                height: 22px;
+                font-size: 0.8rem;
+            }
+            
+            .house {
+                min-width: 24px !important;
+                min-height: 24px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        /* 主流手机竖屏（376-414px） */
+        @media (min-width: 376px) and (max-width: 414px) {
+            .space {
+                font-size: 0.6rem;
+            }
+            
+            .player-piece {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        /* 手机竖屏模式优化 */
+        @media (max-width: 768px) and (orientation: portrait) {
+            body {
+                padding: 10px;
+                min-height: 100vh;
+            }
+            
+            .game-header {
+                margin-bottom: 10px;
+            }
+            
+            .game-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .game-info {
+                gap: 10px;
+                margin-top: 8px;
+            }
+            
+            .info-card {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            /* 棋盘区域优化 - 允许滚动 */
+            .board-container {
+                overflow-x: auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+            }
+            
+            .board {
+                min-width: 600px;  /* 保证棋盘最小宽度 */
+                gap: 3px;
+                padding: 10px;
+                aspect-ratio: 14 / 10;
+                max-height: none;  /* 移除高度限制，允许滚动 */
+            }
+            
+            /* 棋盘中间日志区域 */
+            .board-center {
+                padding: 10px;
+            }
+            
+            .board-center h3 {
+                font-size: 0.9rem;
+            }
+            
+            .message-log {
+                font-size: 0.8rem;
+                max-height: 150px;
+            }
+            
+            /* 格子内容优化 */
+            .space {
+                padding: 35px 4px 4px 4px;
+                font-size: 0.6rem;
+            }
+            
+            .space .name {
+                font-size: 0.6rem;
+                line-height: 1.1;
+            }
+            
+            .space .price {
+                font-size: 0.6rem;
+            }
+            
+            /* 玩家棋子优化 - 防止重叠 */
+            .players-container {
+                gap: 2px;
+                min-height: 20px;
+            }
+            
+            .player-piece {
+                width: 24px;
+                height: 24px;
+                font-size: 0.85rem;
+            }
+            
+            /* 房屋优化 - 防止遮挡 */
+            .house {
+                min-width: 26px !important;
+                min-height: 26px !important;
+                font-size: 15px !important;
+                top: 2px !important;
+            }
+            
+            /* 侧边栏面板优化 */
+            .side-panels {
+                gap: 10px;
+            }
+            
+            .draggable-panel {
+                min-width: 100%;
+            }
+            
+            .panel-header h3 {
+                font-size: 0.95rem;
+            }
+            
+            /* 骰子区域优化 */
+            .dice {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+                line-height: 60px;
+            }
+            
+            /* 按钮优化 - 触摸友好 */
+            .roll-btn,
+            .action-btn,
+            .buy-btn,
+            .end-turn-btn {
+                padding: 12px 30px !important;
+                font-size: 1rem !important;
+                min-height: 48px;  /* 触摸友好最小高度 */
+                min-width: 120px;
+            }
+            
+            /* 玩家信息面板优化 */
+            .player-info {
+                padding: 8px;
+                margin: 4px 0;
+            }
+            
+            .player-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 1.2rem;
+            }
+            
+            .player-name {
+                font-size: 0.85rem;
+            }
+            
+            .player-stats {
+                font-size: 0.75rem;
+            }
+            
+            /* 布局切换按钮优化 */
+            .layout-mode-btn {
+                padding: 10px 18px;
+                font-size: 0.85rem;
+                bottom: 15px;
+                right: 15px;
+            }
+            
+            /* 音效按钮优化 */
+            .sound-control {
+                width: 44px;
+                height: 44px;
+                font-size: 1.3rem;
+                bottom: 15px;
+                left: 15px;
+            }
+            
+            /* 防止元素重叠 - 增加 z-index 层级 */
+            .board {
+                z-index: 1;
+            }
+            
+            .side-panels {
+                z-index: 2;
+            }
+            
+            .layout-mode-btn,
+            .sound-control {
+                z-index: 1000;
+            }
+            
+            .house {
+                z-index: 100 !important;
+            }
+            
+            .player-piece {
+                z-index: 50;
+            }
+        }
+
+        /* 手机横屏模式优化 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            body {
+                padding: 8px;
+            }
+            
+            .game-header {
+                margin-bottom: 8px;
+            }
+            
+            .game-header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .game-info {
+                gap: 15px;
+                margin-top: 6px;
+            }
+            
+            .info-card {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            /* 横屏时棋盘可以更大 */
+            .board {
+                gap: 4px;
+                padding: 12px;
+                max-height: 85vh;
+            }
+            
+            .space {
+                font-size: 0.65rem;
+                padding: 38px 5px 5px 5px;
+            }
+            
+            .player-piece {
+                width: 26px;
+                height: 26px;
+            }
+            
+            .house {
+                min-width: 28px !important;
+                min-height: 28px !important;
+            }
+            
+            /* 横屏时侧边栏可以并排 */
+            .side-panels {
+                flex-direction: row;
+                gap: 8px;
+            }
+            
+            .draggable-panel {
+                flex: 1;
+                min-width: 200px;
+            }
+            
+            .panel-content {
+                padding: 10px;
+            }
+            
+            /* 按钮适当缩小 */
+            .roll-btn {
+                padding: 10px 25px;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* iPad / 平板优化 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .board {
+                gap: 4px;
+                padding: 15px;
+            }
+            
+            .space {
+                font-size: 0.65rem;
+            }
+            
+            .player-piece {
+                width: 26px;
+                height: 26px;
+            }
+            
+            .dice {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            /* 触摸设备 - 增大点击区域 */
+            button,
+            .space,
+            .player-piece {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* 移除 hover 效果（触摸设备不支持） */
+            .space:hover {
+                transform: none;
+            }
+            
+            .player-piece:hover {
+                transform: none;
+            }
+            
+            /* 添加触摸反馈 */
+            button:active {
+                transform: scale(0.95);
+                opacity: 0.9;
+            }
+        }
+
+        /* 防止元素重叠的通用优化 */
+        .board-container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .side-panels {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .layout-mode-btn,
+        .sound-control {
+            position: fixed;
+            z-index: 1000;
+        }
+        
+        /* 确保房屋始终在最上层 */
+        .house {
+            z-index: 100 !important;
+        }
+        
+        /* 玩家棋子层级 */
+        .player-piece {
+            z-index: 50;
+        }
+        
+        /* 格子基础层级 */
+        .space {
+            z-index: 5;
+        }
+        
+        /* 格子 hover 时提升层级 */
+        .space:hover {
+            z-index: 10;
+        }
+
         /* 地产颜色 */
         .color-brown { border-color: #8B4513; }
         .color-lightblue { border-color: #87CEEB; }
