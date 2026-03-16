@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎲 OpenClaw Monopoly - 大富翁 Web 版</title>
+    <title>🎲 大富翁游戏</title>
     <style>
         * {
             margin: 0;
@@ -12,359 +12,1038 @@
         }
 
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            font-family: 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
         .game-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            overflow: hidden;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
         .game-header {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 20px;
             text-align: center;
+            color: white;
+            margin-bottom: 20px;
         }
 
         .game-header h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .game-header p {
-            font-size: 1em;
-            opacity: 0.9;
-        }
-
-        /* 游戏主区域 - 横向布局 */
-        .game-main {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-
-        /* 棋盘区域 */
-        .board-area {
+        .game-info {
             display: flex;
             justify-content: center;
-            align-items: center;
+            gap: 30px;
+            margin-top: 15px;
         }
 
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 4px;
-            padding: 10px;
-            background: #27ae60;
+        .info-card {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 25px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            /* 动态尺寸：最大 800px，最小 400px */
-            width: min(800px, 90vw);
-            height: min(800px, 90vw);
+            backdrop-filter: blur(10px);
         }
 
-        .cell {
-            background: #ecf0f1;
-            border: 2px solid #2c3e50;
-            border-radius: 8px;
+        .info-card span {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* 游戏棋盘 - 长方形设计 */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(14, 1fr);  /* 14 列 */
+            grid-template-rows: repeat(10, 1fr);      /* 10 行 */
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 10;
+            max-height: 75vh;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* 棋盘中间区域 - 放置游戏日志 */
+        .board-center {
+            grid-column: 2 / 14;  /* 从第 2 列到第 14 列（铺满右边） */
+            grid-row: 2 / 10;      /* 10 行的中间区域 */
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 13px;
-            text-align: center;
-            padding: 5px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s;
+            overflow: hidden;
         }
 
-        .cell:hover {
+        .board-center h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1rem;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .space {
+            background: white;
+            border-radius: 8px;
+            padding: 40px 5px 5px 5px;  /* 顶部留出更多房屋空间 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            font-size: 0.7rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+
+        .space .name {
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
+
+        .space .price {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 0.65rem;
+            margin-top: 1px;
+        }
+
+        .space:hover {
             transform: scale(1.05);
             z-index: 10;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        .cell.property { background: #ffeaa7; }
-        .cell.start { background: #fdcb6e; }
-        .cell.jail { background: #e74c3c; color: white; }
-        .cell.chance { background: #9b59b6; color: white; }
-        .cell.fate { background: #e67e22; color: white; }
-        .cell.empty { visibility: hidden; }
+        /* 中间区域的格子隐藏 */
+        .space.center-hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
 
-        .cell-name {
+        .space.corner {
+            background: #ffd700;
             font-weight: bold;
+        }
+
+        .space.property {
+            border-bottom: 8px solid;
+        }
+
+        /* 监狱格子特殊样式 */
+        .space.jail {
+            background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+            color: white;
+            border: 3px solid #8b0000;
+        }
+
+        .space.jail .name {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .space.jail .jail-icon {
+            font-size: 1.5rem;
             margin-bottom: 3px;
-            font-size: 12px;
         }
 
-        .cell-price {
-            font-size: 11px;
-            color: #7f8c8d;
+        .space.jail .price {
+            color: #ff6b6b;
+            font-weight: bold;
         }
 
-        /* 玩家标记 - 增大尺寸 */
-        .player-marker {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 3px solid white;
+        .space .owner-marker {
             position: absolute;
-            transition: all 0.3s;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            z-index: 5;
-            font-size: 16px;
+            top: 2px;
+            right: 2px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* 玩家棋子容器 */
+        .players-container {
+            display: flex !important;
+            justify-content: center;
+            gap: 3px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+            min-height: 25px;
+        }
+
+        .player-piece {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.15s ease-in-out;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1rem;
+            position: relative;
         }
 
-        /* 控制面板 */
-        .control-panel {
-            background: #34495e;
-            color: white;
-            border-radius: 10px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+        .player-piece:hover {
+            transform: scale(1.3);
+            z-index: 10;
         }
 
-        .player-info {
-            background: #2c3e50;
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #f39c12;
+        .player-piece .emoji {
+            position: relative;
+            z-index: 2;
         }
 
-        .player-info h3 {
-            margin-bottom: 15px;
-            color: #f39c12;
-            font-size: 1.3em;
+        /* 玩家棋子颜色 - 红蓝橙紫（与玩家信息面板一致） */
+        .player-piece.player-0 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .player-piece.player-1 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .player-piece.player-2 { background: linear-gradient(135deg, #f39c12, #d68910); }
+        .player-piece.player-3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        /* 移动动画 */
+        .player-piece.moving {
+            animation: bounce 0.3s ease-in-out;
         }
 
-        .player-info p {
-            margin: 8px 0;
-            font-size: 14px;
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
         }
 
-        .dice-section {
-            background: #2c3e50;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+        /* 房屋样式 */
+        .house {
+            position: absolute !important;
+            min-width: 30px !important;
+            min-height: 30px !important;
+            padding: 3px 6px !important;
+            border-radius: 5px;
+            top: 3px !important;  /* 更靠近顶部 */
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            animation: housePop 0.5s ease-out;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 18px !important;
+            font-weight: bold;
+            border: 2px solid white !important;
+            z-index: 100 !important;
+            pointer-events: none;
+            cursor: default;
         }
 
-        .dice-display {
-            font-size: 4em;
-            margin: 15px 0;
-            min-height: 80px;
+        /* 升级特效 */
+        .house.upgrading {
+            animation: houseUpgrade 0.8s ease-out;
         }
 
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.1em;
-            border-radius: 8px;
+        @keyframes houseUpgrade {
+            0% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translateX(-50%) scale(1.5) rotate(180deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateX(-50%) scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        /* 不同玩家的房屋背景色 - 红蓝橙紫 */
+        .house.player-0 { 
+            background: linear-gradient(135deg, #ffcccc, #e74c3c) !important;
+            border-color: #e74c3c !important;
+        }
+        .house.player-1 { 
+            background: linear-gradient(135deg, #ccdbff, #3498db) !important;
+            border-color: #3498db !important;
+        }
+        .house.player-2 { 
+            background: linear-gradient(135deg, #ffe6cc, #f39c12) !important;
+            border-color: #f39c12 !important;
+        }
+        .house.player-3 { 
+            background: linear-gradient(135deg, #f2ccff, #9b59b6) !important;
+            border-color: #9b59b6 !important;
+        }
+
+        @keyframes housePop {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* 不同玩家的房屋边框颜色 */
+        .house.player-0 { border-color: #FF6B6B; }
+        .house.player-1 { border-color: #4ECDC4; }
+        .house.player-2 { border-color: #45B7D1; }
+        .house.player-3 { border-color: #FFA07A; }
+
+        @keyframes housePop {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* 监狱动画 */
+        .jail-effect {
+            animation: jailShake 0.5s ease-in-out;
+        }
+
+        @keyframes jailShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* 机会/命运卡片动画 */
+        .card-draw {
+            animation: cardFlip 0.6s ease-out;
+        }
+
+        @keyframes cardFlip {
+            0% {
+                transform: rotateY(0deg) scale(1);
+            }
+            50% {
+                transform: rotateY(90deg) scale(1.2);
+            }
+            100% {
+                transform: rotateY(0deg) scale(1);
+            }
+        }
+
+        /* 金钱变化动画 */
+        .money-change {
+            animation: moneyFloat 1s ease-out;
+        }
+
+        @keyframes moneyFloat {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+        }
+
+        /* 购买成功特效 */
+        .buy-success {
+            animation: buyCelebrate 0.8s ease-out;
+        }
+
+        @keyframes buyCelebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* 音效控制 */
+        .sound-control {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #667eea;
+            color: #667eea;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
             transition: all 0.3s;
-            margin: 5px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .btn:disabled {
+        .sound-control:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .sound-control.muted {
+            background: rgba(255,255,255,0.9);
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        /* 游戏设置界面 */
+        .game-setup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .game-setup.hidden {
+            display: none;
+        }
+
+        .setup-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .setup-modal h2 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+        }
+
+        .setup-section h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .player-select {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .player-btn {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .player-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .player-btn.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .player-btn span {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .start-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
 
-        .btn-buy { background: #27ae60; }
-        .btn-end { background: #e74c3c; }
 
-        .message-log {
-            background: #2c3e50;
-            padding: 15px;
-            border-radius: 10px;
+
+        /* 主游戏区域 - 棋盘（包含日志）+ 面板 */
+        .main-area {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-top: 20px;
+            min-height: 700px;
+        }
+
+        /* 棋盘容器 */
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 右侧面板容器 */
+        .side-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .side-panels .draggable-panel {
             flex: 1;
+            min-height: 250px;
+        }
+
+        /* 可拖拽面板 */
+        .draggable-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            transition: box-shadow 0.3s;
             min-height: 200px;
-            max-height: 300px;
-            overflow-y: auto;
         }
 
-        .message-log h4 {
-            margin-bottom: 10px;
-            color: #f39c12;
+
+
+        .draggable-panel:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
 
-        .message-log p {
-            margin: 6px 0;
-            padding: 6px;
-            background: #34495e;
-            border-radius: 5px;
-            font-size: 13px;
-            line-height: 1.5;
+        .draggable-panel.dragging {
+            opacity: 0.5;
+            border: 2px dashed #667eea;
         }
 
-        /* 开始界面 */
-        .start-screen {
-            text-align: center;
-            padding: 60px 20px;
+        /* 面板标题栏（拖拽手柄） */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 2px solid #667eea;
+            cursor: grab;
+            user-select: none;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px 15px 0 0;
         }
 
-        .start-screen h2 {
-            font-size: 2.5em;
-            margin-bottom: 30px;
-            color: #2c3e50;
+        .panel-header:active {
+            cursor: grabbing;
         }
 
-        .player-setup {
-            margin: 30px 0;
+        .panel-header h3 {
+            margin: 0;
+            color: #667eea;
+            font-size: 1.2rem;
         }
 
-        .player-input {
-            margin: 10px 0;
+        .panel-content {
+            padding: 20px;
         }
 
-        .player-input input {
-            padding: 10px 20px;
-            font-size: 14px;
+        /* 布局模式切换 */
+        .layout-mode-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
             border: 2px solid #667eea;
-            border-radius: 5px;
-            width: 200px;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
+
+        .layout-mode-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+
 
         /* 响应式 */
-        @media (max-width: 1024px) {
-            .game-main {
+        @media (max-width: 1200px) {
+            .main-area {
                 grid-template-columns: 1fr;
             }
 
-            .game-board {
-                width: min(600px, 90vw);
-                height: min(600px, 90vw);
+            .side-panels {
+                flex-direction: row;
+                flex-wrap: wrap;
             }
 
-            .cell {
-                font-size: 11px;
-            }
-
-            .player-marker {
-                width: 25px;
-                height: 25px;
-                font-size: 14px;
+            .draggable-panel {
+                flex: 1;
+                min-width: 300px;
             }
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .game-board {
-                width: min(400px, 90vw);
-                height: min(400px, 90vw);
-            }
-
-            .cell {
-                font-size: 10px;
-                padding: 3px;
-            }
-
-            .cell-name {
-                font-size: 9px;
-            }
-
-            .player-marker {
-                width: 20px;
-                height: 20px;
-                font-size: 12px;
-            }
-
-            .game-header h1 {
-                font-size: 1.5em;
+            .side-panels {
+                flex-direction: column;
             }
         }
+
+        /* 旧版 panel h3 样式已迁移到 panel-header */
+
+        /* 骰子区域 */
+        .dice-area {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .dice {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            margin: 10px;
+            font-size: 2.5rem;
+            color: white;
+            line-height: 80px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .dice.rolling {
+            animation: roll 0.5s ease-in-out;
+        }
+
+        @keyframes roll {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+        }
+
+        .roll-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .roll-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 玩家信息 */
+        .player-info {
+            display: grid;
+            grid-template-columns: 45px 1fr;
+            gap: 8px;
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 10px;
+            transition: all 0.3s;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .player-info.current {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .player-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .player-avatar.player-0 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .player-avatar.player-1 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .player-avatar.player-2 { background: linear-gradient(135deg, #f39c12, #d68910); }
+        .player-avatar.player-3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        .player-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .player-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .player-money {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .player-properties {
+            color: #666;
+        }
+
+        .player-info.current .player-money {
+            color: #ffd700;
+        }
+
+        .player-info.current .player-properties {
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* 面板内容区域 */
+        .panel-content {
+            padding: 15px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        /* 消息日志 */
+        .message-log {
+            flex: 1;  /* 填充剩余空间 */
+            overflow-y: auto;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            min-height: 0;  /* 允许压缩 */
+            width: 100%;
+            max-height: 100%;  /* 防止超出 */
+        }
+
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message.info { background: #e3f2fd; }
+        .message.success { background: #e8f5e9; }
+        .message.warning { background: #fff3e0; }
+        .message.danger { background: #ffebee; }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.buy {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-btn.pass {
+            background: #6c757d;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* 模式切换 */
+        .mode-toggle {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .mode-toggle label {
+            color: #666;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* 响应式 */
+        @media (min-width: 1920px) {
+            /* 超大屏幕 */
+            .board.standard {
+                max-height: 85vh;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-area {
+                grid-template-columns: 1fr !important;
+            }
+
+            .side-panels {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .draggable-panel {
+                flex: 1;
+                min-width: 300px;
+            }
+
+            .board {
+                aspect-ratio: 16 / 9;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-info {
+                flex-wrap: wrap;
+            }
+            
+            .board {
+                gap: 3px;
+                padding: 10px;
+                aspect-ratio: 4 / 3;
+            }
+            
+            .space {
+                font-size: 0.6rem;
+            }
+
+            .layout-mode-btn {
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .board-controls {
+                gap: 5px;
+            }
+
+            .board-control-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .game-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .info-card {
+                padding: 8px 15px;
+            }
+
+            .board-control-btn {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* 地产颜色 */
+        .color-brown { border-color: #8B4513; }
+        .color-lightblue { border-color: #87CEEB; }
+        .color-pink { border-color: #FF69B4; }
+        .color-orange { border-color: #FFA500; }
+        .color-red { border-color: #FF0000; }
+        .color-yellow { border-color: #FFD700; }
+        .color-green { border-color: #008000; }
+        .color-blue { border-color: #0000FF; }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <!-- 开始界面 -->
-        <div id="startScreen" class="start-screen">
-            <h2>🎲 大富翁 Web 版</h2>
-            <p style="color: #7f8c8d; margin-bottom: 30px;">OpenClaw Monopoly - 横向布局优化版！</p>
+    <!-- 游戏设置界面 -->
+    <div class="game-setup" id="game-setup">
+        <div class="setup-modal">
+            <h2>🎲 大富翁游戏</h2>
             
-            <div class="player-setup">
-                <h3 style="margin-bottom: 15px;">选择玩家数量</h3>
-                <div style="margin: 15px 0;">
-                    <button class="btn" onclick="setPlayers(2)">2 人</button>
-                    <button class="btn" onclick="setPlayers(3)">3 人</button>
-                    <button class="btn" onclick="setPlayers(4)">4 人</button>
+            <div class="setup-section">
+                <h3>👥 选择玩家人数</h3>
+                <div class="player-select">
+                    <button class="player-btn" onclick="selectPlayers(2)">
+                        👥
+                        <span>2 人</span>
+                    </button>
+                    <button class="player-btn" onclick="selectPlayers(3)">
+                        👥👥
+                        <span>3 人</span>
+                    </button>
+                    <button class="player-btn selected" onclick="selectPlayers(4)">
+                        👥👥👥
+                        <span>4 人</span>
+                    </button>
                 </div>
-                
-                <div id="playerInputs"></div>
             </div>
             
-            <button id="startBtn" class="btn" onclick="startGame()" style="display: none; margin-top: 20px;">
-                🚀 开始游戏
-            </button>
+            <button class="start-btn" onclick="startGame()">🎮 开始游戏</button>
         </div>
+    </div>
 
-        <!-- 游戏界面 -->
-        <div id="gameScreen" style="display: none;">
-            <div class="game-header">
-                <h1>🎲 OpenClaw Monopoly</h1>
-                <p>大富翁 Web 版 v4.0 - 横向布局 + 大玩家标记</p>
+    <div class="game-container" id="game-container" style="display: none;">
+        <header class="game-header">
+            <h1>🎲 大富翁游戏</h1>
+            <div class="game-info">
+                <div class="info-card">
+                    <span>🎯 回合：<span id="round">1</span></span>
+                </div>
+                <div class="info-card">
+                    <span>👤 当前玩家：<span id="current-player">玩家 1</span></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 布局切换按钮 -->
+        <button class="layout-mode-btn" onclick="toggleLayoutMode()" title="切换布局模式">
+            🔄 切换布局
+        </button>
+
+        <!-- 音效控制按钮 -->
+        <button class="sound-control" onclick="toggleSound()" title="开关音效" id="sound-btn">
+            🔊
+        </button>
+
+        <!-- 主游戏区域 -->
+        <div class="main-area" id="main-area">
+            <!-- 左侧：棋盘（中间包含日志） -->
+            <div class="board-container">
+                <div class="board" id="board">
+                    <!-- 棋盘中间区域 - 游戏日志 -->
+                    <div class="board-center">
+                        <h3>📜 游戏日志</h3>
+                        <div class="message-log" id="message-log"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="game-main">
-                <!-- 左侧：棋盘 -->
-                <div class="board-area">
-                    <div class="game-board" id="gameBoard"></div>
+            <!-- 右侧：可拖拽面板 -->
+            <div class="side-panels" id="side-panels">
+                <!-- 游戏操作面板 -->
+                <div class="draggable-panel" id="panel-operations">
+                    <div class="panel-header">
+                        <h3>🎲 游戏操作</h3>
+                        <span style="font-size: 1.2rem; cursor: grab;">⋮⋮</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="dice-area">
+                            <div class="dice" id="dice1">⚀</div>
+                            <div class="dice" id="dice2">⚀</div>
+                            <div style="margin-top: 15px; font-size: 1.2rem;">
+                                点数：<span id="dice-total" style="font-weight: bold; color: #667eea;">2</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <button class="roll-btn" id="roll-btn" onclick="rollDice()">🎲 掷骰子</button>
+                        </div>
+                        <div class="action-buttons" id="action-buttons" style="display: none;">
+                            <button class="action-btn buy" onclick="buyProperty()">💰 购买</button>
+                            <button class="action-btn pass" onclick="passAction()">✋ 跳过</button>
+                        </div>
+                        <div class="action-buttons" id="upgrade-buttons" style="display: none; margin-top: 10px;">
+                            <button class="action-btn" style="background: linear-gradient(135deg, #28a745, #1e7e34); color: white;" onclick="upgradeCurrentProperty()">⬆️ 升级房屋</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 右侧：控制面板 -->
-                <div class="control-panel">
-                    <!-- 玩家信息 -->
-                    <div class="player-info">
-                        <h3 id="currentPlayerName">玩家 1</h3>
-                        <p>💰 资金：<span id="currentMoney">15000</span> 元</p>
-                        <p>📍 位置：<span id="currentPosition">起点</span></p>
-                        <p>🏠 地产：<span id="currentProperties">0</span> 处</p>
+                <!-- 玩家信息面板 -->
+                <div class="draggable-panel" id="panel-players">
+                    <div class="panel-header">
+                        <h3>👥 玩家信息</h3>
+                        <span style="font-size: 1.2rem; cursor: grab;">⋮⋮</span>
                     </div>
-
-                    <!-- 骰子区域 -->
-                    <div class="dice-section">
-                        <div class="dice-display" id="diceDisplay">🎲 🎲</div>
-                        <div>
-                            <button id="rollBtn" class="btn" onclick="rollDice()">掷骰子</button>
-                            <button id="buyBtn" class="btn btn-buy" onclick="buyProperty()" style="display: none;">购买地产</button>
-                            <button id="endBtn" class="btn btn-end" onclick="endTurn()" style="display: none;">结束回合</button>
-                        </div>
-                    </div>
-
-                    <!-- 消息日志 -->
-                    <div class="message-log">
-                        <h4>📝 游戏日志</h4>
-                        <div id="messageLog">
-                            <p>🎮 游戏开始！欢迎来到大富翁 Web 版！</p>
-                        </div>
+                    <div class="panel-content">
+                        <div id="players-list"></div>
                     </div>
                 </div>
             </div>
@@ -372,303 +1051,1080 @@
     </div>
 
     <script>
-        const BOARD_SIZE = 20;
-        const START_MONEY = 15000;
+        // 游戏配置
+        const BOARD_SIZE = 44;  // 14+8+14+8 = 44 格（保证首尾相连）
+        const DEFAULT_PLAYERS_COUNT = 4;
+        const START_MONEY = 1500;
         
-        const PROPERTIES = {
-            1: { name: "北京路", price: 1200, rent: 120 },
-            3: { name: "上海街", price: 2000, rent: 200 },
-            5: { name: "广州大道", price: 2400, rent: 240 },
-            6: { name: "深圳路", price: 2800, rent: 280 },
-            8: { name: "杭州街", price: 3200, rent: 320 },
-            9: { name: "成都路", price: 3600, rent: 360 },
-            11: { name: "武汉大道", price: 4000, rent: 400 },
-            13: { name: "南京路", price: 4400, rent: 440 },
-            14: { name: "西安街", price: 4800, rent: 480 },
-            16: { name: "重庆路", price: 5200, rent: 520 },
-            18: { name: "天津大道", price: 5600, rent: 560 },
-            19: { name: "苏州街", price: 6000, rent: 600 }
+        // 玩家人数配置
+        let selectedPlayersCount = 4;
+
+        // 房屋等级配置
+        const HOUSE_LEVELS = [
+            { name: "空地", icon: "", rentMultiplier: 1, buildCost: 0 },
+            { name: "小房子", icon: "🏠", rentMultiplier: 2, buildCost: 0.5 },
+            { name: "公寓", icon: "🏢", rentMultiplier: 4, buildCost: 1.0 },
+            { name: "酒店", icon: "🏨", rentMultiplier: 6, buildCost: 1.5 },
+            { name: "别墅", icon: "🏰", rentMultiplier: 10, buildCost: 2.0 }
+        ];
+
+        // 布局配置
+        let currentLayout = 'horizontal'; // horizontal | vertical
+        let draggedPanel = null;
+
+        // 音效配置
+        let soundEnabled = true;
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // 游戏状态
+        let gameState = {
+            round: 1,
+            currentPlayer: 0,
+            players: [],
+            properties: [],
+            diceValue: 0,
+            hasRolled: false
         };
 
-        let players = [];
-        let currentPlayerIndex = 0;
-        let boardOwners = {};
-        let gameOver = false;
-
-        function setPlayers(count) {
-            const container = document.getElementById('playerInputs');
-            container.innerHTML = '';
-            for (let i = 0; i < count; i++) {
-                const div = document.createElement('div');
-                div.className = 'player-input';
-                div.innerHTML = `<input type="text" id="player${i}Name" placeholder="玩家${i+1}名称" value="玩家${i+1}">`;
-                container.appendChild(div);
-            }
-            document.getElementById('startBtn').style.display = 'inline-block';
+        // 地产数据
+        const PROPERTIES = [
+            { name: "起点", type: "corner", price: 0 },
+            { name: "北京", type: "property", price: 200, rent: 20, color: "brown" },
+            { name: "机会", type: "chance", price: 0 },
+            { name: "上海", type: "property", price: 220, rent: 22, color: "brown" },
+            { name: "所得税", type: "tax", price: 0, tax: 100 },
+            { name: "广州", type: "property", price: 240, rent: 24, color: "brown" },
+            { name: "深圳", type: "property", price: 260, rent: 26, color: "lightblue" },
+            { name: "命运", type: "chance", price: 0 },
+            { name: "杭州", type: "property", price: 280, rent: 28, color: "lightblue" },
+            { name: "成都", type: "property", price: 300, rent: 30, color: "lightblue" },
+            { name: "监狱", type: "corner", price: 0 },
+            { name: "重庆", type: "property", price: 320, rent: 32, color: "pink" },
+            { name: "电力公司", type: "utility", price: 150, rent: 15 },
+            { name: "武汉", type: "property", price: 340, rent: 34, color: "pink" },
+            { name: "西安", type: "property", price: 360, rent: 36, color: "pink" },
+            { name: "南京", type: "property", price: 380, rent: 38, color: "orange" },
+            { name: "机会", type: "chance", price: 0 },
+            { name: "天津", type: "property", price: 400, rent: 40, color: "orange" },
+            { name: "苏州", type: "property", price: 420, rent: 42, color: "orange" },
+            { name: "免费停车", type: "corner", price: 0 },
+            { name: "青岛", type: "property", price: 440, rent: 44, color: "red" },
+            { name: "命运", type: "chance", price: 0 },
+            { name: "大连", type: "property", price: 460, rent: 46, color: "red" },
+            { name: "厦门", type: "property", price: 480, rent: 48, color: "red" },
+            { name: "长沙", type: "property", price: 500, rent: 50, color: "yellow" },
+            { name: "铁路", type: "railroad", price: 200, rent: 25 },
+            { name: "宁波", type: "property", price: 520, rent: 52, color: "yellow" },
+            { name: "无锡", type: "property", price: 540, rent: 54, color: "yellow" },
+            { name: "自来水公司", type: "utility", price: 150, rent: 15 },
+            { name: "福州", type: "property", price: 560, rent: 56, color: "green" },
+            { name: "去监狱", type: "corner", price: 0 },
+            { name: "郑州", type: "property", price: 580, rent: 58, color: "green" },
+            { name: "济南", type: "property", price: 600, rent: 60, color: "green" },
+            { name: "机会", type: "chance", price: 0 },
+            { name: "合肥", type: "property", price: 620, rent: 62, color: "blue" },
+            { name: "命运", type: "chance", price: 0 },
+            { name: "石家庄", type: "property", price: 640, rent: 64, color: "blue" },
+            { name: "太原", type: "property", price: 660, rent: 66, color: "blue" },
+            { name: "奢侈品税", type: "tax", price: 0, tax: 200 },
+            { name: "沈阳", type: "property", price: 680, rent: 68, color: "blue" },
+            { name: "哈尔滨", type: "property", price: 700, rent: 70, color: "blue" },
+            { name: "长春", type: "property", price: 720, rent: 72, color: "blue" },
+            { name: "额外奖金", type: "corner", price: 0 }
+        ];
+        
+        // 确保有 44 个格子
+        while (PROPERTIES.length < 44) {
+            PROPERTIES.push({ name: "空地", type: "empty", price: 0 });
         }
 
+        // 选择玩家人数
+        function selectPlayers(count) {
+            selectedPlayersCount = count;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.player-btn').forEach((btn, index) => {
+                if (index + 2 === count) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        }
+
+        // 开始游戏
         function startGame() {
-            const inputs = document.querySelectorAll('#playerInputs input');
-            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
-            const emojis = ['🔴', '🔵', '🟢', '🟡'];
-            players = [];
-            inputs.forEach((input, i) => {
-                players.push({
-                    name: input.value || `玩家${i+1}`,
-                    color: colors[i],
-                    emoji: emojis[i],
+            // 隐藏设置界面
+            document.getElementById('game-setup').classList.add('hidden');
+            
+            // 显示游戏界面
+            document.getElementById('game-container').style.display = 'block';
+            
+            // 初始化游戏
+            initGame(selectedPlayersCount);
+        }
+
+        // 初始化游戏
+        function initGame(playersCount) {
+            const colors = PLAYER_COLORS; // ['#e74c3c', '#3498db', '#f39c12', '#9b59b6'] 红蓝橙紫
+            const names = ['🚗 玩家 1', '🚀 玩家 2', '💎 玩家 3', '⭐ 玩家 4'];
+            
+            for (let i = 0; i < playersCount; i++) {
+                gameState.players.push({
+                    id: i,
+                    name: names[i],
                     money: START_MONEY,
                     position: 0,
+                    color: colors[i],
                     properties: [],
                     bankrupt: false
                 });
-            });
-            document.getElementById('startScreen').style.display = 'none';
-            document.getElementById('gameScreen').style.display = 'block';
-            createBoard();
-            updatePlayerDisplay();
-            addMessage(`🎮 游戏开始！${players.length}位玩家准备就绪！`);
+            }
+
+            gameState.properties = PROPERTIES.map(p => ({
+                ...p,
+                owner: null,
+                houseLevel: 0  // 房屋等级 0-4
+            }));
+
+            renderBoard();
+            renderPlayers();
+            addMessage(`🎉 游戏开始！${playersCount}名玩家，每位获得 $1500 启动资金！`, 'success');
         }
 
-        function createBoard() {
-            const board = document.getElementById('gameBoard');
-            board.innerHTML = '';
+        // 渲染棋盘
+        function renderBoard() {
+            const board = document.getElementById('board');
             
-            const layout = [
-                // 第 1 行（顶边，从左到右）
-                { type: 'fate', name: '免费停车' },
-                { type: 'property', name: '西安街', price: 4800 },
-                { type: 'fate', name: '命运' },
-                { type: 'property', name: '南京路', price: 4400 },
-                { type: 'property', name: '武汉大道', price: 4000 },
-                { type: 'jail', name: '监狱' },
-                // 第 2 行
-                { type: 'property', name: '天津大道', price: 5600 },
-                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
-                { type: 'property', name: '成都路', price: 3600 },
-                // 第 3 行
-                { type: 'chance', name: '机会' },
-                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
-                { type: 'fate', name: '命运' },
-                // 第 4 行
-                { type: 'property', name: '苏州街', price: 6000 },
-                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
-                { type: 'property', name: '杭州街', price: 3200 },
-                // 第 5 行
-                { type: 'empty' },
-                { type: 'empty' }, { type: 'empty' }, { type: 'empty' }, { type: 'empty' },
-                { type: 'property', name: '深圳路', price: 2800 },
-                // 第 6 行（底边，从左到右）
-                { type: 'start', name: '起点' },
-                { type: 'property', name: '北京路', price: 1200 },
-                { type: 'chance', name: '机会' },
-                { type: 'property', name: '上海街', price: 2000 },
-                { type: 'property', name: '广州大道', price: 2400 },
-                { type: 'property', name: '重庆路', price: 5200 }
-            ];
+            // 保留中间的日志区域
+            const centerLog = board.querySelector('.board-center');
+            board.innerHTML = '';
+            if (centerLog) {
+                board.appendChild(centerLog);
+            }
 
-            for (let i = 0; i < 36; i++) {
-                const item = layout[i];
-                const cell = document.createElement('div');
-                cell.className = 'cell';
+            const positions = getBoardPositions();
+
+            positions.forEach((pos, index) => {
+                const space = document.createElement('div');
+                space.className = `space ${gameState.properties[index].type}`;
+                if (gameState.properties[index].type === 'property') {
+                    space.classList.add(`color-${gameState.properties[index].color}`);
+                }
+                space.style.gridRow = pos.row;
+                space.style.gridColumn = pos.col;
                 
-                if (item.type === 'empty') {
-                    cell.classList.add('empty');
+                // 中间区域的格子隐藏（固定 14×10）
+                if (pos.row > 1 && pos.row < 10 && pos.col > 1 && pos.col < 14) {
+                    space.classList.add('center-hidden');
+                }
+                
+                const prop = gameState.properties[index];
+                
+                // 特殊格子处理 - 监狱
+                let spaceContent = '';
+                if (prop.name === '监狱' || prop.name === '去监狱') {
+                    spaceContent = `
+                        <div class="jail-icon">🚔</div>
+                        <div class="name">${prop.name}</div>
+                        ${prop.price > 0 ? `<div class="price">$${prop.price}</div>` : ''}
+                        <div class="players-container" id="players-${index}"></div>
+                    `;
+                    space.classList.add('jail');
+                } else if (prop.type === 'empty') {
+                    spaceContent = `
+                        <div class="players-container" id="players-${index}"></div>
+                    `;
+                    // 不隐藏格子，只是不显示名称和价格
+                    space.style.background = 'rgba(255,255,255,0.3)';
                 } else {
-                    cell.classList.add(item.type);
-                    cell.innerHTML = `
-                        <div class="cell-name">${item.name}</div>
-                        ${item.price ? `<div class="cell-price">¥${item.price}</div>` : ''}
+                    spaceContent = `
+                        <div class="name">${prop.name}</div>
+                        ${prop.price > 0 ? `<div class="price">$${prop.price}</div>` : ''}
+                        <div class="players-container" id="players-${index}"></div>
                     `;
                 }
                 
-                board.appendChild(cell);
-            }
+                space.innerHTML = spaceContent;
 
-            updatePlayerMarkers();
+                space.onclick = () => showSpaceInfo(index);
+                board.appendChild(space);
+                
+                // 如果该地产已有房屋，渲染房屋（在名字上方）
+                if (prop.owner !== null && prop.houseLevel > 0) {
+                    renderHouseOnSpace(space, prop);
+                }
+            });
+
+            updatePlayerPositions();
         }
 
-        function updatePlayerMarkers() {
-            document.querySelectorAll('.player-marker').forEach(el => el.remove());
+        // 在格子上渲染房屋
+        function renderHouseOnSpace(spaceEl, space) {
+            console.log(`🏠 渲染房屋：${space.name}, owner=${space.owner}, level=${space.houseLevel}`);
             
-            players.forEach((player, index) => {
-                if (player.bankrupt) return;
+            // 移除旧房屋
+            const oldHouse = spaceEl.querySelector('.house');
+            if (oldHouse) oldHouse.remove();
+
+            // 添加新房屋
+            const house = document.createElement('div');
+            house.className = `house player-${space.owner}`;
+            house.innerHTML = HOUSE_LEVELS[space.houseLevel].icon;
+            house.title = `${HOUSE_LEVELS[space.houseLevel].name} (等级${space.houseLevel})`;
+            // 不再使用 inline style，直接使用 CSS 类
+            spaceEl.appendChild(house);
+            
+            console.log(`✅ 房屋已添加到：${space.name}`);
+        }
+
+        // 获取棋盘位置（动态生成足够格子填满周边）
+        function getBoardPositions() {
+            const positions = [];
+            const cols = 14;  // 14 列
+            const rows = 10;  // 10 行
+            
+            // 计算周长：上边 + 右边 + 下边 + 左边
+            const perimeter = cols + (rows - 2) + cols + (rows - 2);  // 14 + 8 + 14 + 8 = 44
+            
+            // 动态生成 44 个格子位置（保证首尾相连）
+            for (let i = 0; i < perimeter; i++) {
+                let row, col;
                 
-                const cell = document.getElementById(`cell${player.position}`);
-                if (cell) {
-                    const marker = document.createElement('div');
-                    marker.className = 'player-marker';
-                    marker.style.background = player.color;
-                    marker.textContent = player.emoji;
-                    
-                    // 多玩家分散排列
-                    const activePlayers = players.filter(p => !p.bankrupt && p.position === player.position).length;
-                    const cellSize = cell.offsetWidth;
-                    const markerSize = 30;
-                    const padding = 5;
-                    
-                    if (activePlayers === 1) {
-                        marker.style.left = `${(cellSize - markerSize) / 2}px`;
-                        marker.style.bottom = `${padding}px`;
+                if (i < cols) {
+                    // 上边：从左到右 (0-13)
+                    row = 1;
+                    col = i + 1;
+                } else if (i < cols + (rows - 2)) {
+                    // 右边：从上到下 (14-21)
+                    row = i - cols + 2;
+                    col = cols;
+                } else if (i < cols * 2 + (rows - 2)) {
+                    // 下边：从右到左 (22-35)
+                    row = rows;
+                    col = cols - (i - cols - (rows - 2));
+                } else {
+                    // 左边：从下到上 (36-43)
+                    row = rows - (i - cols * 2 - (rows - 2));
+                    col = 1;
+                }
+
+                positions.push({ row, col });
+            }
+
+            return positions;
+        }
+
+        // 玩家角色配置 - 不同 emoji
+        const PLAYER_EMOJIS = ['🚗', '🚀', '💎', '⭐'];
+        
+        // 玩家颜色配置 - 红蓝橙紫
+        const PLAYER_COLORS = ['#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
+
+        // 更新玩家位置
+        function updatePlayerPositions() {
+            // 先清空所有位置
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const container = document.getElementById(`players-${i}`);
+                if (container) {
+                    container.innerHTML = '';
+                    container.style.display = 'flex';  // 确保容器可见
+                }
+            }
+
+            // 放置所有玩家
+            gameState.players.forEach((player, index) => {
+                if (!player.bankrupt) {
+                    const container = document.getElementById(`players-${player.position}`);
+                    if (container) {
+                        // 确保容器可见
+                        container.style.display = 'flex';
+                        
+                        const piece = document.createElement('div');
+                        piece.className = `player-piece player-${player.id}`;
+                        piece.innerHTML = `<span class="emoji">${PLAYER_EMOJIS[player.id]}</span>`;
+                        piece.title = player.name;
+                        piece.style.display = 'flex';  // 确保棋子可见
+                        container.appendChild(piece);
+                        
+                        console.log(`✅ 玩家${index} (${player.name}) 在位置${player.position}`);
                     } else {
-                        const positions = [
-                            { left: padding, bottom: padding },
-                            { left: cellSize - markerSize - padding, bottom: padding },
-                            { left: padding, bottom: cellSize - markerSize - padding },
-                            { left: cellSize - markerSize - padding, bottom: cellSize - markerSize - padding }
-                        ];
-                        const pos = positions[index % positions.length];
-                        marker.style.left = `${pos.left}px`;
-                        marker.style.bottom = `${pos.bottom}px`;
+                        console.log(`❌ 位置${player.position}的容器不存在`);
                     }
-                    
-                    marker.title = player.name;
-                    cell.appendChild(marker);
                 }
             });
         }
 
+        // 渲染玩家信息
+        function renderPlayers() {
+            const list = document.getElementById('players-list');
+            list.innerHTML = '';
+
+            gameState.players.forEach((player, index) => {
+                const div = document.createElement('div');
+                div.className = `player-info ${index === gameState.currentPlayer ? 'current' : ''}`;
+                div.innerHTML = `
+                    <div class="player-avatar player-${index}">
+                        ${PLAYER_EMOJIS[index]}
+                    </div>
+                    <div class="player-details">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-stats">
+                            <span class="player-money">$${player.money}</span>
+                            <span class="player-properties">🏠${player.properties.length}块地</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            document.getElementById('current-player').innerHTML = 
+                `<span class="player-avatar player-${gameState.currentPlayer}" style="width:24px;height:24px;font-size:1rem;display:inline-flex;vertical-align:middle;margin-right:5px;">${PLAYER_EMOJIS[gameState.currentPlayer]}</span> ${gameState.players[gameState.currentPlayer].name}`;
+            document.getElementById('round').textContent = gameState.round;
+        }
+
+        // 掷骰子
         function rollDice() {
-            const dice1 = Math.floor(Math.random() * 6) + 1;
-            const dice2 = Math.floor(Math.random() * 6) + 1;
-            const total = dice1 + dice2;
-            const symbols = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-            document.getElementById('diceDisplay').textContent = `${symbols[dice1-1]} ${symbols[dice2-1]}`;
-            addMessage(`🎲 ${players[currentPlayerIndex].name} 掷出 ${dice1} + ${dice2} = ${total}`);
-            movePlayer(total);
-            document.getElementById('rollBtn').disabled = true;
+            if (gameState.hasRolled) return;
+
+            const dice1 = document.getElementById('dice1');
+            const dice2 = document.getElementById('dice2');
+            const rollBtn = document.getElementById('roll-btn');
+
+            rollBtn.disabled = true;
+
+            // 播放骰子音效
+            playSound('dice');
+
+            dice1.classList.add('rolling');
+            dice2.classList.add('rolling');
+
+            setTimeout(() => {
+                const d1 = Math.floor(Math.random() * 6) + 1;
+                const d2 = Math.floor(Math.random() * 6) + 1;
+                const total = d1 + d2;
+
+                dice1.classList.remove('rolling');
+                dice2.classList.remove('rolling');
+
+                const diceChars = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                dice1.textContent = diceChars[d1 - 1];
+                dice2.textContent = diceChars[d2 - 1];
+                document.getElementById('dice-total').textContent = total;
+
+                gameState.diceValue = total;
+                gameState.hasRolled = true;
+
+                addMessage(`🎲 ${gameState.players[gameState.currentPlayer].name} 掷出了 ${total} 点！`, 'info');
+
+                // 延迟后开始移动
+                setTimeout(() => {
+                    movePlayer(total);
+                }, 800);
+
+            }, 500);
         }
 
-        function movePlayer(steps) {
-            const player = players[currentPlayerIndex];
-            const oldPos = player.position;
-            player.position = (player.position + steps) % BOARD_SIZE;
-            if (player.position < oldPos) {
-                player.money += 2000;
-                addMessage(`✅ 经过起点，获得 2000 元！`);
-            }
-            updatePlayerMarkers();
-            updatePlayerDisplay();
-            setTimeout(checkPosition, 500);
-        }
-
-        function checkPosition() {
-            const player = players[currentPlayerIndex];
-            const pos = player.position;
+        // 移动玩家（动画版本）
+        async function movePlayer(steps) {
+            const player = gameState.players[gameState.currentPlayer];
             
-            if (pos === 0) {
-                addMessage(`📍 起点`);
-            } else if (PROPERTIES[pos]) {
-                const prop = PROPERTIES[pos];
-                if (!(pos in boardOwners)) {
-                    addMessage(`🏠 ${prop.name} - 可购买（${prop.price}元）`);
-                    if (player.money >= prop.price) {
-                        document.getElementById('buyBtn').style.display = 'inline-block';
-                    }
-                } else if (boardOwners[pos] === currentPlayerIndex) {
-                    addMessage(`✅ 这是你的地产`);
-                } else {
-                    const rent = prop.rent;
-                    addMessage(`💸 踩到${players[boardOwners[pos]].name}的${prop.name}，需付租金${rent}元`);
-                    if (player.money >= rent) {
-                        player.money -= rent;
-                        players[boardOwners[pos]].money += rent;
-                        addMessage(`💰 支付租金${rent}元给${players[boardOwners[pos]].name}`);
+            addMessage(`🚶 ${player.name} 开始移动...`, 'info');
+
+            for (let i = 0; i < steps; i++) {
+                const oldPos = player.position;
+                player.position = (player.position + 1) % BOARD_SIZE;
+
+                // 经过起点（索引 0）
+                if (player.position === 0 || (player.position < oldPos && oldPos > BOARD_SIZE - 10)) {
+                    player.money += 200;
+                    addMessage(`💰 经过起点，获得 $200 奖金！`, 'success');
+                    playSound('start');
+                    showFloatingText(player.position, '+$200', '#28a745');
+                }
+
+                updatePlayerPositions();
+                
+                const container = document.getElementById(`players-${player.position}`);
+                if (container && container.lastChild) {
+                    const piece = container.lastChild;
+                    piece.classList.add('moving');
+                    setTimeout(() => piece.classList.remove('moving'), 300);
+                }
+
+                // 播放移动音效
+                playSound('move');
+
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            addMessage(`📍 ${player.name} 移动完成！`, 'info');
+            
+            setTimeout(() => {
+                handleLanding();
+            }, 500);
+        }
+
+        // 处理落地
+        function handleLanding() {
+            const player = gameState.players[gameState.currentPlayer];
+            const space = gameState.properties[player.position];
+
+            addMessage(`📍 到达：${space.name}`, 'info');
+
+            if (space.type === 'property' || space.type === 'railroad' || space.type === 'utility') {
+                if (space.owner === null) {
+                    if (player.money >= space.price) {
+                        showActionButtons();
                     } else {
-                        player.bankrupt = true;
-                        addMessage(`💀 ${player.name}破产了！`);
-                        checkGameOver();
+                        addMessage(`💸 资金不足，无法购买`, 'warning');
+                        endTurn();
+                    }
+                } else if (space.owner !== player.id) {
+                    const owner = gameState.players[space.owner];
+                    // 根据房屋等级计算租金
+                    const houseLevel = space.houseLevel || 0;
+                    const rentMultiplier = HOUSE_LEVELS[houseLevel].rentMultiplier;
+                    let rent = Math.floor(space.rent * rentMultiplier);
+                    
+                    player.money -= rent;
+                    owner.money += rent;
+                    
+                    const houseName = HOUSE_LEVELS[houseLevel].name;
+                    addMessage(`💰 支付${owner.name}租金 $${rent}（${houseName}）`, 'danger');
+                    playSound('rent');
+                    showFloatingText(player.position, `-$${rent}`, '#dc3545');
+                    showFloatingText(owner.position, `+$${rent}`, '#28a745');
+                    checkBankruptcy(player);
+                    endTurn();
+                } else {
+                    const currentLevel = space.houseLevel || 0;
+                    const currentHouseName = HOUSE_LEVELS[currentLevel].name;
+                    const currentHouseIcon = HOUSE_LEVELS[currentLevel].icon;
+                    
+                    addMessage(`🏠 这是你的地产：${currentHouseName} ${currentHouseIcon}`, 'success');
+                    
+                    // 显示升级按钮
+                    if (space.houseLevel < 4) {
+                        const nextLevel = currentLevel + 1;
+                        const nextHouseName = HOUSE_LEVELS[nextLevel].name;
+                        const nextHouseIcon = HOUSE_LEVELS[nextLevel].icon;
+                        const upgradeCost = Math.floor(space.price * HOUSE_LEVELS[nextLevel].buildCost);
+                        const nextRent = Math.floor(space.rent * HOUSE_LEVELS[nextLevel].rentMultiplier);
+                        
+                        addMessage(`⬆️ 可以升级到 ${nextHouseName} ${nextHouseIcon}`, 'info');
+                        addMessage(`💰 升级费用：$${upgradeCost} | 升级后租金：$${nextRent}`, 'info');
+                        document.getElementById('upgrade-buttons').style.display = 'flex';
+                        // 不立即结束回合，等待玩家点击升级或跳过
+                        gameState.hasRolled = false;
+                        document.getElementById('roll-btn').disabled = false;
+                        addMessage(`💡 点击"升级房屋"按钮升级，或等待 10 秒自动跳过`, 'info');
+                        
+                        // 10 秒后自动结束回合
+                        setTimeout(() => {
+                            if (document.getElementById('upgrade-buttons').style.display === 'flex') {
+                                document.getElementById('upgrade-buttons').style.display = 'none';
+                                endTurn();
+                            }
+                        }, 10000);
+                    } else {
+                        addMessage(`🏰 已经是最高等级（别墅）！无法再升级`, 'info');
+                        endTurn();
                     }
                 }
-            } else if ([2, 17].includes(pos)) {
-                drawCard('机会');
-            } else if ([7, 12].includes(pos)) {
-                drawCard('命运');
+            } else if (space.type === 'tax') {
+                player.money -= space.tax;
+                addMessage(`💸 缴纳税款 $${space.tax}`, 'danger');
+                playSound('rent');
+                showFloatingText(player.position, `-$${space.tax}`, '#dc3545');
+                checkBankruptcy(player);
+                endTurn();
+            } else if (space.type === 'chance') {
+                handleChance(player);
+            } else if (space.name === '去监狱') {
+                addMessage(`🚔 前往监狱！`, 'warning');
+                playSound('jail');
+                player.position = 10;
+                updatePlayerPositions();
+                
+                // 监狱震动动画
+                const jailSpace = document.querySelector(`[style*="grid-row: 11"][style*="grid-column: 11"]`);
+                if (jailSpace) {
+                    jailSpace.classList.add('jail-effect');
+                    setTimeout(() => jailSpace.classList.remove('jail-effect'), 500);
+                }
+                
+                endTurn();
+            } else {
+                endTurn();
             }
-            
-            updatePlayerDisplay();
-            document.getElementById('endBtn').style.display = 'inline-block';
+
+            renderPlayers();
         }
 
-        function drawCard(type) {
-            const cards = [
-                { text: "恭喜发财！获得奖金 2000 元", money: 2000 },
-                { text: "投资收益！获得奖金 1500 元", money: 1500 },
-                { text: "医疗费用！支付 1000 元", money: -1000 },
-                { text: "交通罚款！支付 500 元", money: -500 }
+        // 机会卡
+        function handleChance(player) {
+            const chances = [
+                { text: '🎁 银行分红，获得 $50', effect: () => player.money += 50, type: 'gain' },
+                { text: '🏥 医疗费用，支付 $50', effect: () => player.money -= 50, type: 'pay' },
+                { text: '🎫 彩票中奖，获得 $100', effect: () => player.money += 100, type: 'gain' },
+                { text: '🚗 交通罚款，支付 $30', effect: () => player.money -= 30, type: 'pay' },
+                { text: '💼 投资回报，获得 $75', effect: () => player.money += 75, type: 'gain' }
             ];
-            const card = cards[Math.floor(Math.random() * cards.length)];
-            const player = players[currentPlayerIndex];
-            addMessage(`🎴 ${type}：${card.text}`);
-            player.money += card.money;
+
+            const chance = chances[Math.floor(Math.random() * chances.length)];
+            addMessage(`🎴 机会卡：${chance.text}`, 'info');
+            
+            // 播放机会卡音效
+            playSound('chance');
+            
+            // 卡片翻转动画
+            const currentSpace = document.querySelector(
+                `[style*="grid-row: ${getBoardPositions()[player.position].row}"][style*="grid-column: ${getBoardPositions()[player.position].col}"]`
+            );
+            if (currentSpace) {
+                currentSpace.classList.add('card-draw');
+                setTimeout(() => currentSpace.classList.remove('card-draw'), 600);
+            }
+            
+            chance.effect();
+            
+            // 显示浮动文字
+            if (chance.type === 'gain') {
+                showFloatingText(player.position, '+$' + Math.abs(chance.effect.toString().match(/\d+/)[0]), '#28a745');
+            } else {
+                showFloatingText(player.position, '-$' + Math.abs(chance.effect.toString().match(/\d+/)[0]), '#dc3545');
+            }
+            
+            checkBankruptcy(player);
+            endTurn();
+        }
+
+        // 显示操作按钮
+        function showActionButtons() {
+            document.getElementById('action-buttons').style.display = 'flex';
+            const space = gameState.properties[gameState.players[gameState.currentPlayer].position];
+            document.querySelector('.action-btn.buy').textContent = `💰 购买 ($${space.price})`;
+        }
+
+        // 购买地产
+        function buyProperty() {
+            const player = gameState.players[gameState.currentPlayer];
+            const space = gameState.properties[player.position];
+
+            console.log(`🔍 购买前：${space.name}, owner=${space.owner}, houseLevel=${space.houseLevel}`);
+
+            if (player.money >= space.price) {
+                player.money -= space.price;
+                space.owner = player.id;
+                space.houseLevel = 1; // 购买后初始为小房子
+                player.properties.push(space);
+
+                console.log(`🔍 购买后：${space.name}, owner=${space.owner}, houseLevel=${space.houseLevel}`);
+
+                addMessage(`🏠 ${player.name} 购买了 ${space.name}！`, 'success');
+                
+                // 播放购买成功音效
+                playSound('buy');
+                
+                // 重新渲染棋盘以显示房屋
+                renderBoard();
+
+                // 显示浮动文字
+                showFloatingText(player.position, `-$${space.price}`, '#dc3545');
+                
+                renderPlayers();
+            }
+
+            document.getElementById('action-buttons').style.display = 'none';
+            endTurn();
+        }
+
+        // 更新房屋显示
+        function updateHouseDisplay(position, space) {
+            // 通过 players 容器查找对应的格子
+            const playersContainer = document.getElementById(`players-${position}`);
+            if (!playersContainer) return;
+
+            const spaceEl = playersContainer.closest('.space');
+            if (!spaceEl) return;
+
+            // 移除旧房屋
+            const oldHouse = spaceEl.querySelector('.house');
+            if (oldHouse) oldHouse.remove();
+
+            // 添加新房屋（使用 CSS 类，不使用 inline style）
+            if (space.houseLevel > 0 && space.owner !== null) {
+                const house = document.createElement('div');
+                house.className = `house player-${space.owner}`;
+                house.innerHTML = HOUSE_LEVELS[space.houseLevel].icon;
+                house.title = `${HOUSE_LEVELS[space.houseLevel].name} (等级${space.houseLevel})`;
+                spaceEl.appendChild(house);
+                
+                console.log(`✅ 房屋已添加：${space.name} - ${HOUSE_LEVELS[space.houseLevel].icon}`);
+            } else {
+                console.log(`❌ 房屋未添加：houseLevel=${space.houseLevel}, owner=${space.owner}`);
+            }
+        }
+
+        // 升级房屋（带确认）
+        function upgradeHouse(propertyIndex) {
+            const player = gameState.players[gameState.currentPlayer];
+            const space = gameState.properties[propertyIndex];
+
+            if (space.owner !== player.id) {
+                addMessage(`❌ 这不是你的地产！`, 'warning');
+                return;
+            }
+            
+            if (space.houseLevel >= 4) {
+                addMessage(`🏰 ${space.name} 已经是最高等级（别墅）！`, 'info');
+                return;
+            }
+
+            const currentLevel = space.houseLevel;
+            const nextLevel = currentLevel + 1;
+            const upgradeCost = Math.floor(space.price * HOUSE_LEVELS[nextLevel].buildCost);
+            
+            if (player.money < upgradeCost) {
+                addMessage(`💸 资金不足，升级需要 $${upgradeCost}（你只有 $${player.money}）`, 'warning');
+                return;
+            }
+
+            // 显示确认对话框
+            const currentHouseName = HOUSE_LEVELS[currentLevel].name;
+            const nextHouseName = HOUSE_LEVELS[nextLevel].name;
+            const nextRent = Math.floor(space.rent * HOUSE_LEVELS[nextLevel].rentMultiplier);
+            
+            const confirmMsg = `🏠 ${space.name} 升级确认
+
+当前：${currentHouseName} ${HOUSE_LEVELS[currentLevel].icon}
+升级到：${nextHouseName} ${HOUSE_LEVELS[nextLevel].icon}
+
+升级费用：$${upgradeCost}
+升级后租金：$${nextRent}
+
+确定要升级吗？`;
+            
+            if (confirm(confirmMsg)) {
+                // 玩家确认升级
+                player.money -= upgradeCost;
+                space.houseLevel = nextLevel;
+
+                addMessage(`⬆️ ${space.name} 升级到 ${nextHouseName}！`, 'success');
+                playSound('buy');
+
+                // 重新渲染棋盘以显示新房屋
+                renderBoard();
+                
+                // 添加升级特效
+                const playersContainer = document.getElementById(`players-${player.position}`);
+                if (playersContainer) {
+                    const spaceEl = playersContainer.closest('.space');
+                    if (spaceEl) {
+                        const house = spaceEl.querySelector('.house');
+                        if (house) {
+                            house.classList.add('upgrading');
+                            setTimeout(() => house.classList.remove('upgrading'), 800);
+                        }
+                    }
+                }
+                
+                showFloatingText(player.position, `-$${upgradeCost}`, '#dc3545');
+                renderPlayers();
+                
+                console.log(`✅ 升级成功：${space.name}, level=${space.houseLevel}, icon=${HOUSE_LEVELS[space.houseLevel].icon}`);
+            } else {
+                addMessage(`❌ 取消了升级`, 'info');
+            }
+            
+            document.getElementById('upgrade-buttons').style.display = 'none';
+        }
+
+        // 跳过
+        function passAction() {
+            document.getElementById('action-buttons').style.display = 'none';
+            document.getElementById('upgrade-buttons').style.display = 'none';
+            addMessage(`✋ ${gameState.players[gameState.currentPlayer].name} 放弃了购买`, 'info');
+            endTurn();
+        }
+
+        // 升级当前房屋（按钮调用）
+        function upgradeCurrentProperty() {
+            const player = gameState.players[gameState.currentPlayer];
+            const space = gameState.properties[player.position];
+            
+            // 直接升级，不显示确认弹窗
+            const currentLevel = space.houseLevel || 0;
+            const nextLevel = currentLevel + 1;
+            const upgradeCost = Math.floor(space.price * HOUSE_LEVELS[nextLevel].buildCost);
+            
+            if (player.money < upgradeCost) {
+                addMessage(`💸 资金不足，升级需要 $${upgradeCost}`, 'warning');
+                return;
+            }
+            
+            // 执行升级
+            player.money -= upgradeCost;
+            space.houseLevel = nextLevel;
+            
+            addMessage(`⬆️ ${space.name} 升级到 ${HOUSE_LEVELS[nextLevel].name}！`, 'success');
+            playSound('buy');
+            
+            // 重新渲染棋盘以显示新房屋
+            renderBoard();
+            
+            showFloatingText(player.position, `-$${upgradeCost}`, '#dc3545');
+            renderPlayers();
+            
+            // 隐藏升级按钮并结束回合
+            document.getElementById('upgrade-buttons').style.display = 'none';
+            endTurn();
+        }
+
+        // 结束回合
+        function endTurn() {
+            gameState.hasRolled = false;
+            document.getElementById('roll-btn').disabled = false;
+            document.getElementById('action-buttons').style.display = 'none';
+            document.getElementById('upgrade-buttons').style.display = 'none';
+
+            // 检查是否有玩家获胜（其他人都破产）
+            const activePlayers = gameState.players.filter(p => !p.bankrupt);
+            if (activePlayers.length <= 1) {
+                const winner = activePlayers[0] || gameState.players[0];
+                addMessage(`🏆 ${winner.name} 获胜！游戏结束！`, 'success');
+                playSound('win');
+                
+                // 胜利动画
+                document.querySelectorAll('.player-piece').forEach((piece, i) => {
+                    if (!gameState.players[i].bankrupt) {
+                        piece.style.animation = 'buyCelebrate 0.5s ease-in-out infinite';
+                    }
+                });
+                
+                document.getElementById('roll-btn').disabled = true;
+                document.getElementById('roll-btn').textContent = '🏆 游戏结束';
+                return;
+            }
+
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            
+            // 跳过破产玩家的回合
+            while (gameState.players[gameState.currentPlayer].bankrupt) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            }
+            
+            if (gameState.currentPlayer === 0) {
+                gameState.round++;
+            }
+
+            renderPlayers();
+            addMessage(`--- 第${gameState.round}回合，${gameState.players[gameState.currentPlayer].name}的回合 ---`, 'info');
+        }
+
+        // 检查破产
+        function checkBankruptcy(player) {
             if (player.money < 0) {
                 player.bankrupt = true;
-                addMessage(`💀 ${player.name}破产了！`);
-                checkGameOver();
+                addMessage(`💀 ${player.name} 破产了！`, 'danger');
+                
+                // 播放破产音效
+                playSound('bankrupt');
+                
+                // 破产动画
+                player.properties.forEach(prop => {
+                    const space = gameState.properties.find(s => s.name === prop.name);
+                    if (space) {
+                        space.owner = null;
+                        // 移除房屋
+                        const spaceEl = document.querySelector(
+                            `[style*="grid-row: ${getBoardPositions()[gameState.properties.indexOf(space)].row}"][style*="grid-column: ${getBoardPositions()[gameState.properties.indexOf(space)].col}"]`
+                        );
+                        if (spaceEl) {
+                            const house = spaceEl.querySelector('.house');
+                            if (house) house.remove();
+                        }
+                    }
+                });
             }
-            updatePlayerDisplay();
-            document.getElementById('endBtn').style.display = 'inline-block';
         }
 
-        function buyProperty() {
-            const player = players[currentPlayerIndex];
-            const pos = player.position;
-            if (PROPERTIES[pos] && !(pos in boardOwners)) {
-                const prop = PROPERTIES[pos];
-                if (player.money >= prop.price) {
-                    player.money -= prop.price;
-                    player.properties.push(pos);
-                    boardOwners[pos] = currentPlayerIndex;
-                    addMessage(`✅ 购买了${prop.name}（${prop.price}元）`);
-                    document.getElementById('buyBtn').style.display = 'none';
-                    updatePlayerDisplay();
-                    updatePlayerMarkers();
+        // 显示地块信息
+        function showSpaceInfo(index) {
+            const space = gameState.properties[index];
+            let info = `📍 ${space.name}\n`;
+            
+            if (space.type === 'property') {
+                info += `价格：$${space.price}\n`;
+                info += `租金：$${space.rent}\n`;
+                if (space.owner !== null) {
+                    info += `所有者：${gameState.players[space.owner].name}`;
+                } else {
+                    info += `状态：待售`;
                 }
+            } else if (space.type === 'railroad') {
+                info += `价格：$${space.price}\n`;
+                info += `租金：$${space.rent}`;
+            } else if (space.type === 'tax') {
+                info += `税款：$${space.tax}`;
+            }
+
+            alert(info);
+        }
+
+
+
+        // 添加消息
+        function addMessage(text, type = 'info') {
+            const log = document.getElementById('message-log');
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            log.insertBefore(msg, log.firstChild);
+
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
             }
         }
 
-        function endTurn() {
-            document.getElementById('buyBtn').style.display = 'none';
-            document.getElementById('endBtn').style.display = 'none';
-            document.getElementById('rollBtn').disabled = false;
-            do {
-                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-            } while (players[currentPlayerIndex].bankrupt);
-            updatePlayerDisplay();
-            addMessage(`\n🎯 轮到${players[currentPlayerIndex].name}`);
+        // 显示浮动文字特效
+        function showFloatingText(position, text, color) {
+            const positions = getBoardPositions();
+            const pos = positions[position];
+            
+            const board = document.getElementById('board');
+            const spaceEl = document.querySelector(
+                `[style*="grid-row: ${pos.row}"][style*="grid-column: ${pos.col}"]`
+            );
+            
+            if (!spaceEl) return;
+            
+            const floatEl = document.createElement('div');
+            floatEl.textContent = text;
+            floatEl.style.cssText = `
+                position: absolute;
+                top: 20%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${color};
+                color: white;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: bold;
+                font-size: 1rem;
+                z-index: 100;
+                animation: moneyFloat 1s ease-out forwards;
+                pointer-events: none;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            `;
+            
+            spaceEl.appendChild(floatEl);
+            
+            setTimeout(() => {
+                floatEl.remove();
+            }, 1000);
         }
 
-        function updatePlayerDisplay() {
-            const player = players[currentPlayerIndex];
-            document.getElementById('currentPlayerName').textContent = `${player.emoji} ${player.name}`;
-            document.getElementById('currentPlayerName').style.color = player.color;
-            document.getElementById('currentMoney').textContent = player.money;
-            const names = ['起点','北京路','机会','上海街','广州大道','深圳路','武汉大道','命运','杭州街','成都路','监狱','南京路','命运','西安街','重庆路','免费停车','天津大道','机会','苏州街'];
-            document.getElementById('currentPosition').textContent = names[player.position] || `位置${player.position}`;
-            document.getElementById('currentProperties').textContent = player.properties.length;
-        }
+        // ========== 音效系统 ==========
+        // 使用 Web Audio API 生成音效
+        function playSound(type) {
+            if (!soundEnabled) return;
 
-        function addMessage(text) {
-            const log = document.getElementById('messageLog');
-            const p = document.createElement('p');
-            p.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-            log.appendChild(p);
-            log.scrollTop = log.scrollHeight;
-        }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-        function checkGameOver() {
-            const activePlayers = players.filter(p => !p.bankrupt);
-            if (activePlayers.length === 1) {
-                gameOver = true;
-                addMessage(`\n🎉🎉🎉 ${activePlayers[0].name}获胜！🎉🎉🎉`);
-                setTimeout(() => alert(`🎉 恭喜${activePlayers[0].name}获胜！`), 100);
+            switch (type) {
+                case 'move':
+                    // 移动音效 - 轻快的滴答声
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                    
+                case 'dice':
+                    // 骰子音效 - 滚动声
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.3);
+                    oscillator.type = 'square';
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                    
+                case 'buy':
+                    // 购买成功 - 欢快的上升音阶
+                    playNote(523.25, 0, 0.15); // C5
+                    playNote(659.25, 0.15, 0.15); // E5
+                    playNote(783.99, 0.3, 0.3); // G5
+                    break;
+                    
+                case 'rent':
+                    // 支付租金 - 下降音阶
+                    playNote(392.00, 0, 0.2); // G4
+                    playNote(329.63, 0.2, 0.2); // E4
+                    playNote(261.63, 0.4, 0.3); // C4
+                    break;
+                    
+                case 'jail':
+                    // 监狱 - 低沉的警告音
+                    oscillator.frequency.value = 200;
+                    oscillator.type = 'sawtooth';
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.frequency.value = 180;
+                        osc2.type = 'sawtooth';
+                        gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gain2.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
+                        osc2.start();
+                        osc2.stop(audioContext.currentTime + 0.5);
+                    }, 600);
+                    break;
+                    
+                case 'chance':
+                    // 机会卡 - 神秘的音效
+                    playNote(523.25, 0, 0.2);
+                    playNote(659.25, 0.2, 0.2);
+                    playNote(783.99, 0.4, 0.3);
+                    playNote(1046.50, 0.7, 0.4);
+                    break;
+                    
+                case 'bankrupt':
+                    // 破产 - 悲剧的下降音
+                    playNote(523.25, 0, 0.3);
+                    playNote(415.30, 0.3, 0.3);
+                    playNote(329.63, 0.6, 0.3);
+                    playNote(261.63, 0.9, 0.5);
+                    break;
+                    
+                case 'start':
+                    // 经过起点 - 奖励音效
+                    playNote(523.25, 0, 0.1);
+                    playNote(659.25, 0.1, 0.1);
+                    playNote(783.99, 0.2, 0.1);
+                    playNote(1046.50, 0.3, 0.3);
+                    break;
+                    
+                case 'win':
+                    // 胜利 - 庆祝音阶
+                    [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+                        playNote(freq, i * 0.15, 0.2);
+                    });
+                    break;
             }
         }
 
-        // 窗口大小变化时重新计算玩家标记位置
-        window.addEventListener('resize', () => {
-            updatePlayerMarkers();
+        function playNote(freq, delay, duration) {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + duration);
+            osc.start(audioContext.currentTime + delay);
+            osc.stop(audioContext.currentTime + delay + duration);
+        }
+
+        // 切换音效
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-btn');
+            if (soundEnabled) {
+                btn.textContent = '🔊';
+                btn.classList.remove('muted');
+                addMessage('🔊 音效已开启', 'info');
+            } else {
+                btn.textContent = '🔇';
+                btn.classList.add('muted');
+                addMessage('🔇 音效已关闭', 'info');
+            }
+        }
+
+        // 启动游戏
+        initGame();
+
+        // 初始化音效系统（需要用户交互后才能播放）
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+
+        // ========== 面板拖拽功能 ==========
+        const panels = document.querySelectorAll('.draggable-panel');
+        const sidePanels = document.getElementById('side-panels');
+
+        panels.forEach(panel => {
+            const header = panel.querySelector('.panel-header');
+            
+            header.addEventListener('dragstart', (e) => {
+                draggedPanel = panel;
+                panel.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', panel.id);
+            });
+
+            panel.addEventListener('dragend', () => {
+                panel.classList.remove('dragging');
+                draggedPanel = null;
+            });
         });
+
+        sidePanels.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(sidePanels, e.clientY);
+            if (draggedPanel && afterElement) {
+                sidePanels.insertBefore(draggedPanel, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.draggable-panel:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // 切换布局模式
+        function toggleLayoutMode() {
+            const mainArea = document.getElementById('main-area');
+            
+            if (currentLayout === 'horizontal') {
+                mainArea.style.gridTemplateColumns = '1fr';
+                mainArea.style.gridTemplateRows = 'auto auto';
+                currentLayout = 'vertical';
+                addMessage('📐 已切换到垂直布局（棋盘在上，面板在下）', 'info');
+            } else {
+                mainArea.style.gridTemplateColumns = '1fr 400px';
+                mainArea.style.gridTemplateRows = '1fr';
+                currentLayout = 'horizontal';
+                addMessage('📐 已切换到水平布局（棋盘在左，面板在右）', 'info');
+            }
+        }
     </script>
 </body>
 </html>
